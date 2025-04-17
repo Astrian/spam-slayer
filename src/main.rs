@@ -42,8 +42,9 @@ async fn main() {
 				String::new()
 			});
 			let deepseek_client = DeepSeekClient::new_with_api_key(deepseek_key);
+			let system_prompt = "You are an AI assistant responsible for determining whether a chat message is spam or part of illegal gray-market content.\nPlease follow these rules carefully:\n\n- Consider both the message content **and the sender's profile information** (including `first_name`, `last_name`, `username`).\n- Watch out for suspicious profile fields containing phrases like \"loan\", \"click here\", \"add me\", etc.\n- If the profile contains spam indicators but the text is benign, **still classify it as spam**.\n- Do **not** classify messages as spam **just because** they use memes, emojis, exaggerated tone, or mimic spam formatting.\n- A message **should be marked as spam only if it:\n\t- Attempts to redirect users to external websites;\n\t- Promotes illegal services or activities;\n\t- Tries to induce clicks, scan codes, or add unknown contacts.\n- If the message is simply humorous, uses trendy phrases, or follows meme formats **without harmful intent**, classify it as **not spam**.\n\nReturn only in JSON format:\n\n```json\n{ \"is_spam\": true/false }\"".to_string();
 			let request = RequestBody::new_messages(vec![
-				Message::new_system_message("Here is a message received from a group chat, including the metadata with sender's profile and more. You need to judge if it is a spam or not, including any user-visible metadata. Return a pure, top-level JSON to make sure your output can be parsed by JSON parser. The JSON format: { \"is_spam\": boolean }.".to_string()),
+				Message::new_system_message(system_prompt),
 				Message::new_user_message(json),
 			]);
 			let response = deepseek_client.chat_completions(request).await;
@@ -55,6 +56,14 @@ async fn main() {
 								info!("✅ Parsed JSON: {}", json);
 								if let Some(is_spam) = json.get("is_spam") {
 									info!("🚨 Spam status: {}", is_spam);
+									if json.get("is_spam").and_then(Value::as_bool).unwrap_or(false) {
+										// delete the message
+										if let Err(e) = _bot.delete_message(msg.chat.id, msg.id).await {
+											info!("❌ Failed to delete message: {}", e);
+										} else {
+											info!("✅ Message deleted successfully.");
+										}
+									}
 								}
 							}
 						} else {
