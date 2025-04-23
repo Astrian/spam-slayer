@@ -30,10 +30,11 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || '22' }}
         source: target/release/spam_slayer
-        target: /tmp/spam_slayer
+        target: /opt/spam_slayer
         overwrite: true
+        strip_components: 2 
 
-    - name: Configure passwordless sudo
+    - name: Restart systemd service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
@@ -41,25 +42,8 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || '22' }}
         script: |
-          echo "${{ secrets.VPS_USER }} ALL=(ALL) NOPASSWD: /bin/systemctl, /bin/rm, /bin/mv, /bin/chmod" | sudo tee /etc/sudoers.d/spam_slayer
-          sudo chmod 440 /etc/sudoers.d/spam_slayer
-
-    - name: Deploy and restart service
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_PORT || '22' }}
-        script: |
-          echo "Stopping service..."
-          sudo systemctl stop spam_slayer.service
-          echo "Deploying to /opt/spam_slayer..."
-          sudo rm -rf /opt/spam_slayer/*
-          sudo mv /tmp/spam_slayer /opt/spam_slayer/
-          sudo chmod +x /opt/spam_slayer/spam_slayer
-          echo "Starting service..."
-          sudo systemctl start spam_slayer.service
+          sudo systemctl daemon-reload
+          sudo systemctl restart spam_slayer.service
 
     - name: Notify completion
       run: |
