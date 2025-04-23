@@ -3,7 +3,7 @@ name: Deploy Spam Slayer
 on:
   push:
     branches:
-      - main
+      - main  # 或你的部署分支
 
 jobs:
   build-and-deploy:
@@ -31,8 +31,9 @@ jobs:
         port: ${{ secrets.VPS_PORT || '22' }}
         source: target/release/spam_slayer
         target: /opt/spam_slayer/spam_slayer
+        overwrite: true
 
-    - name: Restart Spam Slayer systemd service
+    - name: Restart systemd service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
@@ -40,4 +41,5 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || '22' }}
         script: |
+          sudo systemctl daemon-reload
           sudo systemctl restart spam_slayer.service
