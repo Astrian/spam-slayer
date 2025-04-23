@@ -32,6 +32,7 @@ jobs:
         source: target/release/spam_slayer
         target: /opt/spam_slayer/spam_slayer
         overwrite: true
+        strip_components: 2 
 
     - name: Restart systemd service
       uses: appleboy/ssh-action@v1.0.3
