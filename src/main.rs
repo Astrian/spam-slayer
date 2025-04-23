@@ -7,6 +7,9 @@ use log::info;
 use serde_json::{self, json, Value};
 use std::env::var as env_var;
 use teloxide::{prelude::*, types::Message as TelegramMessage};
+use uuid::Uuid;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[tokio::main]
 async fn main() {
@@ -19,29 +22,29 @@ async fn main() {
 	let bot = Bot::from_env();
 
 	teloxide::repl(bot, |_bot: Bot, msg: TelegramMessage| async move {
-		let json = match serde_json::to_string_pretty(&msg) {
+		let msg_json = match serde_json::to_string_pretty(&msg) {
 				Ok(json) => {
-						info!("Message as JSON:\n{}", json);
-						json
+					info!("Message as JSON:\n{}", json);
+					json
 				}
 				Err(e) => {
-						info!("Failed to serialize msg: {}", e);
-						String::new()
-				}
+				info!("Failed to serialize msg: {}", e);
+				String::new()
+			}
 		};
 
 		// if the message does not have a text, return
 		if msg.text().is_none() {
-				info!("Received a message without text");
-				return Ok(());
+			info!("Received a message without text");
+			return Ok(());
 		}
 
 		if msg.chat.is_group() || msg.chat.is_supergroup() {
 			info!("Received a message in a group chat");
 			// fetch deepseek key from env
 			let gemini_key = env_var("GEMINI_API_KEY").unwrap_or_else(|_| {
-					info!("GEMINI_API_KEY not found in env");
-					String::new()
+				info!("GEMINI_API_KEY not found in env");
+				String::new()
 			});
 
 			// create a client
@@ -57,7 +60,7 @@ async fn main() {
 			});
 			history.push(Content {
 				role: Role::User,
-				parts: vec![ContentPart::Text(json)],
+				parts: vec![ContentPart::Text(msg_json.clone())],
 			});
 			let req_json = json!(
 				{
@@ -71,9 +74,9 @@ async fn main() {
 			let response = match client.generate_content(model_name, &request).await {
 					Ok(response) => response,
 					Err(e) => {
-							info!("Error: {:?}", e);
-							return Ok(());
-					}
+					info!("Error: {:?}", e);
+					return Ok(());
+				}
 			};
 			if let Some(candidates) = response.candidates {
 				for candidate in &candidates {
@@ -84,10 +87,20 @@ async fn main() {
 									info!("Parsed JSON: {}", json);
 									if let Some(content) = json.get("is_spam") {
 										info!("Spam status: {}", content);
-										if json
+										let is_spam = json
 											.get("is_spam")
 											.and_then(Value::as_bool)
-											.unwrap_or(false)
+											.unwrap_or(false);
+
+										// Generate UUID
+										let uuid = Uuid::new_v4();
+
+										// Write to CSV file
+										if let Err(e) = write_to_csv(msg_json.clone(), is_spam, &uuid.to_string()).await {
+											info!("Failed to write to CSV: {}", e);
+										}
+
+										if is_spam
 										{
 											// delete the message
 											if let Err(e) =
@@ -115,6 +128,22 @@ async fn main() {
 		Ok(())
 	})
 	.await;
+}
+
+async fn write_to_csv(message_json: String, is_spam: bool, uuid: &str) -> Result<(), Box<dyn std::error::Error>> {
+	info!("Writing to CSV file...");
+	let file_path = "./samples.csv";
+	let mut file = OpenOptions::new()
+		.write(true)
+		.append(true)
+		.create(true)
+		.open(file_path)?;
+
+	let message_text = message_json.to_string();
+	let csv_line = format!("\"{}\",\"{}\",\"{}\"\n", message_text.replace("\"", "\"\"").replace("\n", "").replace(" ", ""), is_spam, uuid);
+
+	file.write_all(csv_line.as_bytes())?;
+	Ok(())
 }
 
 fn extract_json_block(text: &str) -> Option<Value> {

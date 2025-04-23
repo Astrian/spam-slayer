@@ -1896,6 +1896,7 @@ dependencies = [
  "serde_json",
  "teloxide",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
