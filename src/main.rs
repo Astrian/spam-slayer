@@ -118,11 +118,11 @@ async fn main() {
 }
 
 fn extract_json_block(text: &str) -> Option<Value> {
-    let pure_json_string = text
-        .trim()
-        .trim_start_matches("```json")
-        .trim_start_matches("```")
-        .trim_end_matches("```");
+	let pure_json_string = text
+		.trim()
+		.trim_start_matches("```json")
+		.trim_start_matches("```")
+		.trim_end_matches("```");
 
-    serde_json::from_str::<Value>(pure_json_string).ok()
+	serde_json::from_str::<Value>(pure_json_string).ok()
 }
