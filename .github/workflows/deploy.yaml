@@ -30,7 +30,7 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || '22' }}
         source: target/release/spam_slayer
-        target: /opt/spam_slayer/spam_slayer
+        target: /opt/spam_slayer
         overwrite: true
         strip_components: 2 
 
