@@ -31,7 +31,6 @@ jobs:
         port: ${{ secrets.VPS_PORT || '22' }}
         source: target/release/spam_slayer
         target: /opt/spam_slayer/spam_slayer
-        strip_components: 2
 
     - name: Restart Spam Slayer systemd service
       uses: appleboy/ssh-action@v1.0.3
