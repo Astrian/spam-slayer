@@ -45,4 +45,4 @@ jobs:
 
       - name: Notify deployment completion
         run: |
-          curl -X GET "https://bark.nas.astrian.moe/NpQY8VAcM4tiSNeMYJXr9F/Spam%20Slayer%20部署/任务%20${{ github.run_id }}%20执行完成?group=Span%20Slayer%20CICD"
+          curl -X GET "https://${{ secrets.BARK_DOMAIN }}/${{ secrets.BARK_TOKEN }}/Spam%20Slayer%20部署/任务%20${{ github.run_id }}%20执行完成?group=Span%20Slayer%20CICD"
