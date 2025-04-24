@@ -40,7 +40,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || '22' }}
           script: |
-            sudo mv /opt/spam_slayer/spam_slayer.tmp /opt/spam_slayer/spam_slayer
+            sudo mv /opt/spam_slayer/spam_slayer.tmp/target/release/spam_slayer /opt/spam_slayer/spam_slayer
             sudo systemctl restart spam_slayer.service
 
       - name: Notify deployment completion
