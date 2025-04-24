@@ -14,9 +14,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Rust
-        uses: actions/setup-rust@v1
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
+          toolchain: stable
+          override: true
 
       - name: Build the project
         run: cargo build --release
@@ -27,7 +28,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_PORT || '22' }}
           source: "target/release/spam_slayer"
           target: "/opt/spam_slayer/spam_slayer.tmp"
 
@@ -37,7 +38,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_PORT || '22' }}
           script: |
             sudo mv /opt/spam_slayer/spam_slayer.tmp /opt/spam_slayer/spam_slayer
             sudo systemctl restart spam_slayer.service
