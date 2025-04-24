@@ -42,3 +42,7 @@ jobs:
           script: |
             sudo mv /opt/spam_slayer/spam_slayer.tmp /opt/spam_slayer/spam_slayer
             sudo systemctl restart spam_slayer.service
+
+      - name: Notify deployment completion
+        run: |
+          curl -X GET "https://bark.nas.astrian.moe/NpQY8VAcM4tiSNeMYJXr9F/Spam%20Slayer%20部署/任务%20${{ github.run_id }}%20执行完成?group=Span%20Slayer%20CICD"
