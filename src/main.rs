@@ -41,6 +41,14 @@ async fn main() {
 
 		if msg.chat.is_group() || msg.chat.is_supergroup() {
 			info!("Received a message in a group chat");
+
+			// detect is_automatic_forward
+			if msg.is_automatic_forward() {
+				info!("Received a message from a forward. Will be ignored.");
+				// if the message is from a forward, return
+				return Ok(());
+			}
+
 			// fetch deepseek key from env
 			let gemini_key = env_var("GEMINI_API_KEY").unwrap_or_else(|_| {
 				info!("GEMINI_API_KEY not found in env");
