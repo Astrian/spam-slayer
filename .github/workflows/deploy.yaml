@@ -43,6 +43,16 @@ jobs:
             sudo mv /opt/spam_slayer/spam_slayer.tmp/target/release/spam_slayer /opt/spam_slayer/spam_slayer
             sudo systemctl restart spam_slayer.service
 
+      - name: Remove .tmp folder
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || '22' }}
+          script: |
+            sudo rm -rf /opt/spam_slayer/spam_slayer.tmp
+
       - name: Notify deployment completion
         run: |
           curl -X GET "https://${{ secrets.BARK_DOMAIN }}/${{ secrets.BARK_TOKEN }}/Spam%20Slayer%20部署/任务%20${{ github.run_id }}%20执行完成?group=Span%20Slayer%20CICD"
